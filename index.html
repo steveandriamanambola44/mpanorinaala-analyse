@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mpanorina Ala — Analyse des résultats (organisateur)</title>
+<style>
+:root{--p1:#0f3d2e;--p2:#1c6b4a;--p3:#3f9c6d;--accent:#e8b64c;--fond:#f4f8f3;--ink:#14241d;--ink2:#4a5d54;
+--line:#d9e4dd;--rouge:#b4442f;--vert:#2f7d4f;--ambre:#c98a1e;--sh:0 2px 10px rgba(16,40,30,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+background:var(--fond);color:var(--ink);line-height:1.55}
+.wrap{max-width:1280px;margin:0 auto;padding:0 18px}
+.hero{background:linear-gradient(165deg,var(--p1),var(--p2));color:#fff;padding:1.8rem 0;border-radius:0 0 28px 28px;margin-bottom:1.4rem}
+h1{margin:0 0 .3rem;font-size:1.8rem}h2{font-size:1.3rem;margin:1.8rem 0 .6rem}h3{font-size:1rem;margin:0 0 .6rem}
+.lede{color:rgba(255,255,255,.88);margin:0;max-width:72ch}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem;box-shadow:var(--sh);margin-bottom:1.2rem}
+.drop{border:2.5px dashed var(--p3);border-radius:14px;background:#fff;padding:2.2rem 1.4rem;text-align:center;cursor:pointer;transition:.18s}
+.drop:hover,.drop.over{background:#eef7f1;border-color:var(--p2)}
+.drop b{display:block;font-size:1.05rem;margin-bottom:.3rem}
+.drop span{color:var(--ink2);font-size:.9rem}
+.btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--p2);color:#fff;border:0;border-radius:999px;
+padding:.7rem 1.4rem;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:var(--sh)}
+.btn:hover{background:var(--p1)}.btn.sec{background:transparent;color:var(--p1);border:1.5px solid var(--p2);box-shadow:none}
+.btn:disabled{background:#c3cfc8;cursor:not-allowed}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1.2rem}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:.8rem 1rem}
+.kpi .l{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2);font-weight:700}
+.kpi .v{font-size:1.5rem;font-weight:700;letter-spacing:-.5px}
+table{width:100%;border-collapse:collapse;font-size:.88rem;background:#fff}
+th,td{padding:.5rem .6rem;text-align:left;border-bottom:1px solid #eef3f0;white-space:nowrap}
+th{background:#f3f8f5;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);
+position:sticky;top:0;cursor:pointer;user-select:none}
+th:hover{background:#e8f2ec}
+tbody tr:hover{background:#f7fbf9}
+.tw{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:12px}
+.sc{font-weight:700}.sc.h{color:var(--vert)}.sc.m{color:var(--ambre)}.sc.b{color:var(--rouge)}
+.bar{display:inline-block;height:7px;border-radius:4px;background:#eaf0ec;width:80px;vertical-align:middle;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px}
+.empty{color:var(--ink2);text-align:center;padding:2rem}
+.flt{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem}
+select,input[type=text]{padding:.5rem .7rem;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:.9rem;background:#fff}
+.err{color:var(--rouge);font-size:.86rem;margin-top:.6rem}
+.compTable td:first-child{white-space:normal}
+footer{padding:2rem 0 3rem;text-align:center;color:var(--ink2);font-size:.82rem}
+.muted{color:var(--ink2);font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="hero"><div class="wrap">
+  <h1>Analyse des résultats</h1>
+  <p class="lede">Déposez ici les fichiers JSON que les participants ont téléchargés à la fin de leur partie. Tout se passe dans votre navigateur : aucun fichier n'est envoyé sur internet.</p>
+</div></div>
+
+<div class="wrap">
+  <div class="drop" id="drop">
+    <b>Déposez les fichiers JSON ici</b>
+    <span>ou cliquez pour les sélectionner — vous pouvez en déposer plusieurs à la fois</span>
+    <input type="file" id="file" multiple accept=".json,application/json" hidden>
+  </div>
+  <div id="err"></div>
+
+  <div id="res" style="display:none">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="flt">
+      <label class="muted">Session&nbsp;
+        <select id="fSession"><option value="">toutes</option></select></label>
+      <label class="muted">Écorégion&nbsp;
+        <select id="fEco"><option value="">toutes</option></select></label>
+      <input type="text" id="fTxt" placeholder="Filtrer par nom ou organisation">
+      <button class="btn sec" id="btnCsv">Exporter le tableau en CSV</button>
+      <button class="btn sec" id="btnReset">Vider</button>
+    </div>
+
+    <h2>Participants</h2>
+    <div class="tw"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    <p class="muted" style="margin-top:.5rem">Cliquez sur un en-tête de colonne pour trier.</p>
+
+    <h2>Moyennes par compétence</h2>
+    <p class="muted">Sur la sélection courante. C'est la lecture qui sert à identifier les besoins de renforcement de capacités du groupe.</p>
+    <div class="panel"><table class="compTable" id="tComp"></table></div>
+
+    <h2>Comparaison par écorégion</h2>
+    <div class="panel"><table id="tEco"></table></div>
+
+    <h2>Décisions les plus fréquentes</h2>
+    <p class="muted">Pour chaque carte, la répartition des choix. Une carte où tout le monde répond pareil n'évalue rien ; une carte où les réponses se dispersent est celle qui discrimine.</p>
+    <div class="panel" style="max-height:520px;overflow:auto"><table id="tDec"></table></div>
+  </div>
+</div>
+<footer>INDRI · initiative Alamino — page d'analyse hors ligne</footer>
+
+<script>
+const COMP = {
+  eco:"Compréhension du contexte écologique", diag:"Diagnostic territorial",
+  besoins:"Besoins et priorités des populations", tech:"Choix des techniques de restauration",
+  plan:"Planification des activités", budget:"Gestion du budget et des ressources",
+  mobil:"Mobilisation des acteurs", foncier:"Gestion des enjeux fonciers",
+  risque:"Anticipation des risques", adapt:"Adaptation face aux imprévus",
+  suivi:"Suivi et évaluation des résultats", durab:"Durabilité du projet"
+};
+let PARTIES = [], tri = { col: "score_global", desc: true };
+
+const $ = i => document.getElementById(i);
+const dec = n => (n == null || isNaN(n)) ? "—" : String(Math.round(n * 10) / 10).replace(".", ",");
+const esc = s => String(s == null ? "" : s).replace(/[<>&"]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));
+const fmt = n => (n == null || isNaN(n)) ? "—" : Math.round(n).toLocaleString("fr-FR").replace(/ | /g," ");
+
+/* ---------- lecture des fichiers ---------- */
+$("drop").onclick = () => $("file").click();
+$("file").onchange = e => charger(e.target.files);
+["dragenter","dragover"].forEach(ev => $("drop").addEventListener(ev, e => { e.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave","drop"].forEach(ev => $("drop").addEventListener(ev, e => { e.preventDefault(); $("drop").classList.remove("over"); }));
+$("drop").addEventListener("drop", e => charger(e.dataTransfer.files));
+
+function charger(files) {
+  const msgs = [];
+  let restant = files.length;
+  if (!restant) return;
+  [...files].forEach(f => {
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const o = JSON.parse(r.result);
+        if (!o.partie_id || !o.scores) throw new Error("ce fichier ne contient pas de partie terminée");
+        if (PARTIES.some(p => p.partie_id === o.partie_id)) msgs.push(f.name + " : partie déjà chargée, ignorée");
+        else PARTIES.push(o);
+      } catch (x) { msgs.push(esc(f.name) + " : " + esc(x.message)); }
+      if (--restant === 0) { $("err").innerHTML = msgs.length ? '<div class="err">' + msgs.join("<br>") + "</div>" : ""; rendre(); }
+    };
+    r.onerror = () => { msgs.push(esc(f.name) + " : lecture impossible"); if (--restant === 0) rendre(); };
+    r.readAsText(f);
+  });
+}
+
+$("btnReset").onclick = () => { PARTIES = []; $("err").innerHTML = ""; rendre(); };
+["fSession","fEco"].forEach(i => $(i).onchange = rendre);
+$("fTxt").oninput = rendre;
+
+function selection() {
+  const s = $("fSession").value, e = $("fEco").value, t = $("fTxt").value.trim().toLowerCase();
+  return PARTIES.filter(p =>
+    (!s || p.session === s) && (!e || p.ecoregion === e) &&
+    (!t || (p.participant + " " + p.organisation).toLowerCase().includes(t)));
+}
+
+function rendre() {
+  if (!PARTIES.length) { $("res").style.display = "none"; return; }
+  $("res").style.display = "block";
+  majFiltre("fSession", [...new Set(PARTIES.map(p => p.session))]);
+  majFiltre("fEco", [...new Set(PARTIES.map(p => p.ecoregion))], PARTIES);
+  const S = selection();
+
+  const moy = k => S.length ? S.reduce((a, p) => a + (Number(k(p)) || 0), 0) / S.length : 0;
+  $("kpis").innerHTML = [
+    ["Parties", S.length],
+    ["Score moyen", dec(moy(p => p.score_global))],
+    ["Survie moyenne", dec(moy(p => p.etat_final && p.etat_final.taux_survie)) + " %"],
+    ["Adhésion moyenne", dec(moy(p => p.etat_final && p.etat_final.adhesion)) + " %"],
+    ["Budget en déficit", S.filter(p => p.etat_final && p.etat_final.budget < 0).length],
+    ["Organisations", new Set(S.map(p => p.organisation)).size]
+  ].map(([l, v]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div></div>`).join("");
+
+  // tableau participants
+  const cols = [
+    ["participant","Participant"],["organisation","Organisation"],["region","Région"],
+    ["ecoregion_nom","Écorégion"],["session","Session"],["score_global","Score"],["niveau","Niveau"],
+    ["_survie","Survie %"],["_surf","Surface ha"],["_budget","Budget final"],["_adh","Adhésion"],
+    ["_duree","Durée min"],["_flags","Passifs"]
+  ];
+  $("tbl").querySelector("thead").innerHTML = "<tr>" + cols.map(([k, l]) =>
+    `<th data-k="${k}">${l}${tri.col === k ? (tri.desc ? " ▾" : " ▴") : ""}</th>`).join("") + "</tr>";
+  $("tbl").querySelectorAll("th").forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    tri = { col: k, desc: tri.col === k ? !tri.desc : true }; rendre();
+  });
+  const val = (p, k) => ({
+    _survie: p.etat_final?.taux_survie, _surf: p.etat_final?.surface_restauree,
+    _budget: p.etat_final?.budget, _adh: p.etat_final?.adhesion,
+    _duree: duree(p), _flags: (p.flags || []).length
+  }[k] ?? p[k]);
+  const rows = S.slice().sort((a, b) => {
+    const x = val(a, tri.col), y = val(b, tri.col);
+    const n = (typeof x === "number" && typeof y === "number") ? x - y : String(x).localeCompare(String(y), "fr");
+    return tri.desc ? -n : n;
+  });
+  $("tbl").querySelector("tbody").innerHTML = rows.map(p => {
+    const sc = Number(p.score_global) || 0;
+    const cl = sc >= 70 ? "h" : sc >= 50 ? "m" : "b";
+    return `<tr>
+      <td>${esc(p.participant)}</td><td>${esc(p.organisation)}</td><td>${esc(p.region)}</td>
+      <td>${esc(p.ecoregion_nom)}</td><td>${esc(p.session)}</td>
+      <td class="sc ${cl}">${sc}</td><td>${esc(p.niveau)}</td>
+      <td>${dec(p.etat_final?.taux_survie)}</td><td>${dec(p.etat_final?.surface_restauree)}</td>
+      <td style="color:${(p.etat_final?.budget ?? 0) < 0 ? "var(--rouge)" : "inherit"}">${fmt(p.etat_final?.budget)} Ar</td>
+      <td>${dec(p.etat_final?.adhesion)} %</td><td>${dec(duree(p))}</td>
+      <td title="${esc((p.flags || []).join(', '))}">${(p.flags || []).length || "—"}</td></tr>`;
+  }).join("");
+
+  // moyennes par competence
+  const mc = Object.keys(COMP).map(k => [k, S.length ? S.reduce((a, p) => a + (Number(p.scores?.[k]) || 0), 0) / S.length : 0])
+    .sort((a, b) => a[1] - b[1]);
+  $("tComp").innerHTML = "<tr><th>Compétence</th><th>Moyenne /10</th><th></th><th>Parties sous 5</th></tr>" +
+    mc.map(([k, v]) => {
+      const col = v >= 7 ? "var(--vert)" : v >= 4.5 ? "var(--ambre)" : "var(--rouge)";
+      const bas = S.filter(p => (Number(p.scores?.[k]) || 0) < 5).length;
+      return `<tr><td>${COMP[k]}</td><td class="sc" style="color:${col}">${dec(v)}</td>
+        <td><span class="bar"><i style="width:${v * 10}%;background:${col}"></i></span></td>
+        <td>${bas} sur ${S.length}</td></tr>`;
+    }).join("");
+
+  // comparaison par ecoregion
+  const parEco = {};
+  S.forEach(p => { (parEco[p.ecoregion_nom] ||= []).push(p); });
+  $("tEco").innerHTML = "<tr><th>Écorégion</th><th>Parties</th><th>Score moyen</th><th>Survie moyenne</th><th>Compétence la plus faible</th></tr>" +
+    Object.entries(parEco).map(([n, L]) => {
+      const m = Object.keys(COMP).map(k => [k, L.reduce((a, p) => a + (Number(p.scores?.[k]) || 0), 0) / L.length])
+        .sort((a, b) => a[1] - b[1])[0];
+      return `<tr><td>${esc(n)}</td><td>${L.length}</td>
+        <td class="sc">${dec(L.reduce((a, p) => a + (Number(p.score_global) || 0), 0) / L.length)}</td>
+        <td>${dec(L.reduce((a, p) => a + (Number(p.etat_final?.taux_survie) || 0), 0) / L.length)} %</td>
+        <td>${COMP[m[0]]} (${dec(m[1])})</td></tr>`;
+    }).join("");
+
+  // repartition des decisions
+  const d = {};
+  S.forEach(p => [...(p.decisions || []), ...(p.evenements || [])].forEach(x => {
+    const c = (d[x.carte] ||= { titre: x.carte_titre, phase: x.phase, ch: {} });
+    c.ch[x.choix] = (c.ch[x.choix] || 0) + 1;
+  }));
+  const ids = Object.keys(d).sort((a, b) => d[a].phase - d[b].phase || a.localeCompare(b));
+  $("tDec").innerHTML = "<tr><th>Phase</th><th>Carte</th><th>Répartition des choix</th><th>Dispersion</th></tr>" +
+    ids.map(id => {
+      const c = d[id], tot = Object.values(c.ch).reduce((a, b) => a + b, 0);
+      const parts = Object.entries(c.ch).sort().map(([k, v]) => `${k} : ${v} (${Math.round(v / tot * 100)} %)`).join(" · ");
+      const maxp = Math.max(...Object.values(c.ch)) / tot;
+      const disp = maxp > .8 ? "faible" : maxp > .55 ? "moyenne" : "forte";
+      const col = disp === "forte" ? "var(--vert)" : disp === "moyenne" ? "var(--ambre)" : "var(--ink2)";
+      return `<tr><td>${c.phase}</td><td style="white-space:normal">${esc(c.titre)}</td>
+        <td style="white-space:normal">${parts}</td><td style="color:${col};font-weight:600">${disp}</td></tr>`;
+    }).join("");
+}
+
+function duree(p) {
+  if (!p.debut || !p.fin) return null;
+  return (new Date(p.fin) - new Date(p.debut)) / 60000;
+}
+
+function majFiltre(id, vals, src) {
+  const el = $(id), cur = el.value;
+  const lib = v => src ? (src.find(p => p.ecoregion === v) || {}).ecoregion_nom || v : v;
+  el.innerHTML = '<option value="">toutes</option>' + vals.sort().map(v => `<option value="${esc(v)}">${esc(lib(v))}</option>`).join("");
+  el.value = vals.includes(cur) ? cur : "";
+}
+
+$("btnCsv").onclick = () => {
+  const S = selection(); if (!S.length) return;
+  const q = v => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+  const h = ["partie_id","session","participant","organisation","region","ecoregion_nom","score_global","niveau",
+             "taux_survie","surface_restauree","budget_final","adhesion_finale","credibilite_finale","duree_minutes","passifs"]
+             .concat(Object.keys(COMP).map(k => "score_" + k));
+  const lignes = S.map(p => [p.partie_id, p.session, p.participant, p.organisation, p.region, p.ecoregion_nom,
+    p.score_global, p.niveau, p.etat_final?.taux_survie, p.etat_final?.surface_restauree, p.etat_final?.budget,
+    p.etat_final?.adhesion, p.etat_final?.credibilite, duree(p) == null ? "" : Math.round(duree(p)),
+    (p.flags || []).join(" | ")].concat(Object.keys(COMP).map(k => p.scores?.[k])).map(q).join(";"));
+  const csv = "﻿" + h.join(";") + "\n" + lignes.join("\n") + "\n";
+  const nom = "mpanorina-ala_resultats_" + new Date().toISOString().slice(0, 10) + ".csv";
+  enregistrer(nom, csv);
+};
+
+let DL = undefined;
+if (window.claude && typeof window.claude.use === "function") {
+  try { window.claude.use("downloads").then(d => { DL = d; }).catch(() => { DL = null; }); } catch (e) { DL = null; }
+} else { DL = null; }
+
+async function enregistrer(nom, contenu) {
+  if (DL && typeof DL.save === "function") {
+    try { await DL.save({ filename: nom, data: contenu }); $("err").innerHTML = ""; return; }
+    catch (e) { $("err").innerHTML = '<div class="err">L&rsquo;enregistrement a ete refuse par le navigateur. Le tableau reste consultable a l&rsquo;ecran.</div>'; return; }
+  }
+  try {
+    const b = new Blob([contenu], { type: "text/csv;charset=utf-8" });
+    const u = URL.createObjectURL(b), a = document.createElement("a");
+    a.href = u; a.download = nom; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(u), 1500);
+    $("err").innerHTML = "";
+  } catch (e) {
+    $("err").innerHTML = '<div class="err">Le telechargement n&rsquo;est pas possible dans ce navigateur.</div>';
+  }
+}
+
+</script>
+</body>
+</html>
